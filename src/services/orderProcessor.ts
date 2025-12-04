@@ -40,7 +40,7 @@ export class OrderProcessor {
 
     async saveOrder(userId: number, chatId: number, message: string): Promise<IOrder | null> {
         let parsedOrder = this.parseOrderMessage(message);
-        
+
         if (!parsedOrder) return null;
         // const productRepo = new ProductRepository();
         // const products = await productRepo.searchProducts(parsedOrder.productName);
@@ -70,30 +70,40 @@ export class OrderProcessor {
         };
         const orders = await this.orderRepository.getOrdersForDay();
         for (const order of orders) {
-            const limitProduct = products.find(product => {
-                return product.name === order.productName && product.discount_remaining_quantity > 0
-            });
             const productData = products.find(product => {
                 return product.name == order.productName
             });
-            if (limitProduct) {
+            // const limitProduct = products.find(product => {
+            //     return product.name === order.productName && product.discount_remaining_quantity > 0
+            // });
+            // if (limitProduct) {
 
-            } else {
-                if (!productData) return null;
-                const findSize = productData?.options?.find((option: any) => {
-                    return option.name === "Size"
-                })
-                const price = findSize?.option_items?.items[0]?.price?.value && findSize?.option_items?.items[0]?.price?.value > 0 ? 
-                    findSize?.option_items?.items[0]?.price?.value : 0
-                productInfo = {
-                    productName: productData.name,
-                    amount: price
-                }
+            // } else {
+            //     if (!productData) return null;
+            //     const findSize = productData?.options?.find((option: any) => {
+            //         return option.name === "Size"
+            //     })
+            //     const price = findSize?.option_items?.items[0]?.price?.value && findSize?.option_items?.items[0]?.price?.value > 0 ? 
+            //         findSize?.option_items?.items[0]?.price?.value : 0
+            //     productInfo = {
+            //         productName: productData.name,
+            //         amount: price
+            //     }
+            // }
+            if (!productData) return null;
+            const findSize = productData?.options?.find((option: any) => {
+                return option.name === "Size"
+            })
+            const price = findSize?.option_items?.items[0]?.price?.value && findSize?.option_items?.items[0]?.price?.value > 0 ?
+                findSize?.option_items?.items[0]?.price?.value : 0
+            productInfo = {
+                productName: productData.name,
+                amount: price
             }
-            for (const product of products) {
-                if (order.productName === product.name && product.discount_remaining_quantity > 0) {
-                }
-            }
+            // for (const product of products) {
+            //     if (order.productName === product.name && product.discount_remaining_quantity > 0) {
+            //     }
+            // }
         }
         return productInfo;
     }

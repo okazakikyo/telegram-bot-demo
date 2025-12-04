@@ -5,13 +5,16 @@ import { logger } from './utils/logger';
 import { config } from './config';
 // import { productsRouter, test } from './api/v1/controllers/ProductController';
 import routes from './routes/index.route'
+// import { webhookCallback } from 'grammy';
 const app = express();
 const port = config.port;
 
-const initApi = () => {
+const initApi = (bot: any) => {
     try {
         // app.use(productsRouter);
         // app.use("/api/v1/test", test);
+        // app.use("/webhook", webhookCallback(bot, "express"));
+        // app.get("/", (_, res) => res.send("Bot is running."));
         app.use(express.json());
         app.use(routes);
         app.listen(port, () => {
@@ -30,7 +33,7 @@ async function main() {
         const db = new Database();
         await db.connect();
         const teleBot = new TelegramBot();
-        initApi();
+        initApi(teleBot);
         // Start the bot
         await teleBot.start();
         process.on('SIGINT', async () => {

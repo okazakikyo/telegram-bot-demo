@@ -29,6 +29,26 @@ export class TelegramBot {
         this.setupHandlers();
     }
 
+    public async handleSaveOrder(ctx: Context, userId: number, chatId: number, text: string): Promise<void> {
+        try {
+            const savedOrder = await this.orderProcessor.saveOrder(userId, chatId, text);
+            if (savedOrder) {
+                await ctx.react('👍');
+                // if (savedOrder.productName && savedOrder?.amount > 0) {
+                //     await ctx.react(  '👍');
+                // } else {
+                //     await ctx.reply('❌ Invalid product name or format. Please try different name or format e.g. "Cafe sữa đã - 52k" again.');
+                // }
+                // await ctx.reply(
+                //     `✅ Order saved: ${savedOrder.productName} - ${savedOrder.amount / 1000}k`,
+                //     { reply_to_message_id: ctx.msg.message_id }
+                // );
+            }
+        } catch (error) {
+            catchReplyError(error, ctx, 'message format');
+        }
+    }
+
     private setupMiddleware(): void {
         const collection = mongoose.connection.collection('sessions');
         this.bot.use(session({
@@ -88,26 +108,14 @@ export class TelegramBot {
                     return;
                 }
                 if (userId) {
-                    const savedOrder = await this.orderProcessor.saveOrder(userId, chatId, text);
-                    if (savedOrder) {
-                        await ctx.react(  '👍');
-                        // if (savedOrder.productName && savedOrder?.amount > 0) {
-                        //     await ctx.react(  '👍');
-                        // } else {
-                        //     await ctx.reply('❌ Invalid product name or format. Please try different name or format e.g. "Cafe sữa đã - 52k" again.');
-                        // }
-                        // await ctx.reply(
-                        //     `✅ Order saved: ${savedOrder.productName} - ${savedOrder.amount / 1000}k`,
-                        //     { reply_to_message_id: ctx.msg.message_id }
-                        // );
-                    }
+                    await this.handleSaveOrder(ctx, userId, chatId, text);
                 }
                 // if (userId) {
                 //     // Update user's last interaction
                 //     await User.updateOne(
                 //         { userId },
                 //         {
-                //             $set: { lastInteraction: new Date() },
+                //             $set: { lastInteraction: new Date() }, 
                 //             $inc: { messageCount: 1 }
                 //         },
                 //         { upsert: false }
@@ -122,6 +130,15 @@ export class TelegramBot {
                 console.error('Error handling message:', error);
             }
         });
+
+        this.bot.on('edited_message', async (ctx) => {
+            const editedText = ctx.editedMessage.text;
+            const userId = ctx.from?.id;
+            const chatId = ctx.chatId;
+            if (editedText) {
+                await this.handleSaveOrder(ctx, userId, chatId, editedText);
+            }
+        })
     }
 
     private async runDailySummary(): Promise<void> {
@@ -169,7 +186,7 @@ export class TelegramBot {
                         });
                     }
                 }
-            }            
+            }
         } catch (error) {
             console.error('Error sending daily summary:', error);
         }
